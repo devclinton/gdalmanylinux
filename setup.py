@@ -7,7 +7,7 @@
 # Howard Butler hobu.inc@gmail.com
 
 
-gdal_version = '2.4.0'
+gdal_version = '3.1.2'
 
 import sys
 import shutil
@@ -22,7 +22,7 @@ from glob import glob
 HAVE_NUMPY=False
 HAVE_SETUPTOOLS = False
 BUILD_FOR_CHEESESHOP = False
-GNM_ENABLED = False
+GNM_ENABLED = True
 
 # ---------------------------------------------------------------------------
 # Default build options
@@ -204,14 +204,28 @@ class gdal_ext(build_ext):
         self.library_dirs.append(os.path.join(self.gdaldir,'lib'))
         self.include_dirs.append(os.path.join(self.gdaldir,'include'))
 
+# This is only needed with Python 2.
+if sys.version_info < (3,):
+    try:
+        import multiprocessing
+        from concurrent.futures import ThreadPoolExecutor as Pool
+
+        num_jobs = multiprocessing.cpu_count()
+
+        def parallel_build_extensions(self):
+            self.check_extensions_list(self.extensions)
+
+            with Pool(num_jobs) as pool:
+                # Note: map() returns an iterator that needs to be consumed.
+                list(pool.map(self.build_extension, self.extensions))
+
+        build_ext.build_extensions = parallel_build_extensions
+    except:
+        pass
 
 extra_link_args = []
 extra_compile_args = []
 
-if sys.platform == 'darwin' and [int(x) for x in os.uname()[2].split('.')] >= [11, 0, 0]:
-    # since MacOS X 10.9, clang no longer accepts -mno-fused-madd
-    #extra_compile_args.append('-Qunused-arguments')
-    os.environ['ARCHFLAGS'] = '-Wno-error=unused-command-line-argument-hard-error-in-future'
 
 gdal_module = Extension('osgeo._gdal',
                         sources=['extensions/gdal_wrap.cpp'],
@@ -271,7 +285,7 @@ if HAVE_NUMPY:
 
 packages = ["osgeo",]
 
-readme = str(open('README.txt','rb').read())
+readme = ""
 
 name = 'GDAL'
 version = gdal_version
