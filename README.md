@@ -18,10 +18,10 @@ The resulting wheels have the gdal and proj data directories packaged up inside 
 
 These may be `pip` installed into your linux environment ad nauseam.  For example, from the directory containing the 'wheels' directory, you can run
 ```
-docker run -v `pwd`:/io -it --rm python:2.7 /bin/bash
+docker run -v `pwd`:/io -it --rm python:3.6 /bin/bash
 ```
 to get yourself into a clean python docker container.  From inside this container, try
 ```
-pip install /io/wheels/GDAL-2.4.0-cp27-cp27mu-manylinux1_x86_64.whl
+pip install /io/wheels/GDAL-3.1.2-cp36-cp36mu-manylinux1_x86_64.whl
 ```
 You should experience a quick install of GDAL and Numpy.  Try them out!
